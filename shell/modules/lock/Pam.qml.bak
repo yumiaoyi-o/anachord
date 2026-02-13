@@ -1,0 +1,388 @@
+import qs.config
+import Quickshell
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+exec quickshell -p /home/yumiaoyi/.config/quickshell/Vermilion 2>>/tmp/vermilion-greeter-stderr.log# Redirect stderr to file for debug captureexport GDK_DPI_SCALE="$scale"export QT_SCALE_FACTOR="$scale"export QT_AUTO_SCREEN_SCALE_FACTOR=0export QT_ENABLE_HIGHDPI_SCALING=1scale=$(python3 -c "print(float($dpi)/96.0)")dpi=150# Force DPI scaling (match the real session)export QT_LOGGING_RULES="quickshell.service.greetd=true;quickshell.service.greetd.debug=true"# Enable debug logging for greetd IPCexport QT_QPA_PLATFORMTHEME="qt5ct"export XDG_DATA_DIRS="/usr/share:/home/yumiaoyi/.local/share"export QS_ICON_THEME="Papirus"export HOME="/home/yumiaoyi"export USER="yumiaoyi"set -euo pipefail# This script is exec'd by Hyprland in the greeter session.import Quickshell.Io
+import Quickshell.Wayland
+import Quickshell.Services.Pam
+import Quickshell.Services.Greetd
+import QtQuick
+
+Scope {
+    id: root
+
+    required property WlSessionLock lock
+
+    // ── Public interface (unchanged for Center.qml compatibility) ──
+    readonly property alias passwd: passwd
+    readonly property alias fprint: fprint
+    property string lockMessage
+    property string state
+    property string fprintState
+    property string buffer
+
+    // Whether we are running as a greetd greeter (login) vs session lock
+    readonly property bool greeterMode: Greetd.available
+
+    // Unified "authenticating" flag for UI (works in both modes)
+    readonly property bool authenticating: greeterMode ? _greetdAuthActive : passwd.active
+
+    // Unified auth message for UI
+    readonly property string authMessage: greeterMode ? _greetdMessage : passwd.message
+
+    // Unified start-auth function for submit button
+    function startAuth(): void {
+        if (!buffer) return;
+        if (greeterMode) {
+            _log("startAuth: state=" + Greetd.state + " bufLen=" + buffer.length + " available=" + Greetd.available);
+            if (Greetd.state === GreetdState.Inactive) {
+                const user = Quickshell.env("USER") ?? "yumiaoyi";
+                _log("createSession for user: " + user);
+                Greetd.createSession(user);
+                greetdWaitingForSession = true;
+            } else if (Greetd.state === GreetdState.Authenticating) {
+                _log("Already authenticating, sending respond directly");
+                Greetd.respond(buffer);
+                buffer = "";
+                _greetdAuthActive = true;
+                pamTimeout.restart();
+            } else {
+                _log("Unexpected state: " + Greetd.state);
+            }
+        } else {
+            passwd.start();
+            pamTimeout.restart();
+        }
+    }
+
+    property bool _greetdAuthActive: false
+    property string _greetdMessage: ""
+
+    // File-based logging for greeter debugging (console.log goes to tty behind Hyprland)
+    function _log(msg: string): void {
+        const line = "[Greetd " + new Date().toISOString() + "] " + msg;
+        console.log(line);
+        _logProc.command = ["sh", "-c", "echo '" + line.replace(/'/g, "'\\''") + "' >> /tmp/vermilion-greeter.log"];
+        _logProc.running = true;
+    }
+
+    Process {
+        id: _logProc
+    }
+
+    signal flashMsg
+
+    Component.onCompleted: {
+        if (greeterMode) {
+            _log("Pam component ready. greeterMode=true, Greetd.available=" + Greetd.available
+                + ", Greetd.state=" + Greetd.state);
+        }
+    }
+
+    function handleKey(event: KeyEvent): void {
+        if (authenticating || state === "max")
+            return;
+
+        if (event.key === Qt.Key_Enter || event.key === Qt.Key_Return) {
+            if (!buffer)
+                return;
+            startAuth();
+        } else if (event.key === Qt.Key_Backspace) {
+            if (event.modifiers & Qt.ControlModifier) {
+                buffer = "";
+            } else {
+                buffer = buffer.slice(0, -1);
+            }
+        } else if (" abcdefghijklmnopqrstuvwxyz1234567890`~!@#$%^&*()-_=+[{]}\\|;:'\",<.>/?".includes(event.text.toLowerCase())) {
+            buffer += event.text;
+        }
+    }
+
+    // ── greetd greeter mode ──
+    property bool greetdWaitingForSession: false
+
+    Connections {
+        enabled: root.greeterMode
+        target: Greetd
+
+        function onAuthMessage(message: string, error: bool, responseRequired: bool, echoResponse: bool): void {
+            root._log("authMessage: msg=" + message
+                     + " error=" + error
+                     + " responseRequired=" + responseRequired
+                     + " waiting=" + root.greetdWaitingForSession
+                     + " bufLen=" + root.buffer.length);
+
+            if (error) {
+                // Error message — C++ auto-responds for non-responseRequired
+                root._greetdMessage = message;
+                root.state = "error";
+                root.flashMsg();
+                root.stateReset.restart();
+                root._greetdAuthActive = false;
+                root.greetdWaitingForSession = false;
+                return;
+            }
+
+            if (responseRequired) {
+                if (root.greetdWaitingForSession && root.buffer.length > 0) {
+                    // Password prompt — send the buffered password
+                    root.greetdWaitingForSession = false;
+                    root._log("Sending password, length=" + root.buffer.length);
+                    Greetd.respond(root.buffer);
+                    root.buffer = "";
+                    root._greetdAuthActive = true;
+                    root.pamTimeout.restart();
+                } else if (root.greetdWaitingForSession) {
+                    // Password prompt but buffer is empty — should not happen
+                    root._log("ERROR: password prompt but buffer is empty!");
+                    root.greetdWaitingForSession = false;
+                    Greetd.respond("");
+                    root._greetdAuthActive = true;
+                    root.pamTimeout.restart();
+                } else {
+                    // Unexpected additional prompt
+                    root._log("Unexpected prompt, responding empty");
+                    Greetd.respond("");
+                }
+            }
+            // Non-responseRequired (info) messages: C++ auto-responds, nothing to do here
+        }
+
+        function onReadyToLaunch(): void {
+            root._log("readyToLaunch — state=" + Greetd.state + ", about to call launch");
+            root.pamTimeout.stop();
+            root._greetdAuthActive = false;
+            Greetd.launch(["start-hyprland"], [], true);
+            root._log("launch() returned, state now=" + Greetd.state);
+        }
+
+        function onLaunched(): void {
+            root._log("launched — greeter should exit now");
+        }
+
+        function onStateChanged(): void {
+            root._log("stateChanged -> " + Greetd.state);
+        }
+
+        function onAuthFailure(message: string): void {
+            root._log("authFailure: " + message);
+            root.pamTimeout.stop();
+            root._greetdAuthActive = false;
+            root._greetdMessage = message || "认证失败";
+            root.state = "fail";
+            root.flashMsg();
+            root.stateReset.restart();
+        }
+
+        function onError(error: string): void {
+            root._log("error: " + error);
+            root.pamTimeout.stop();
+            root._greetdAuthActive = false;
+            root._greetdMessage = error;
+            root.state = "error";
+            root.flashMsg();
+            root.stateReset.restart();
+        }
+    }
+
+    // ── PAM lock mode (original) ──
+
+    PamContext {
+        id: passwd
+
+        config: "passwd"
+        configDirectory: Quickshell.shellDir + "/assets/pam.d"
+
+        onMessageChanged: {
+            if (message.startsWith("The account is locked"))
+                root.lockMessage = message;
+            else if (root.lockMessage && message.endsWith(" left to unlock)"))
+                root.lockMessage += "\n" + message;
+        }
+
+        onResponseRequiredChanged: {
+            if (!responseRequired)
+                return;
+
+            respond(root.buffer);
+            root.buffer = "";
+        }
+
+        onCompleted: res => {
+            pamTimeout.stop();
+
+            if (res === PamResult.Success)
+                return root.lock.unlock();
+
+            if (res === PamResult.Error)
+                root.state = "error";
+            else if (res === PamResult.MaxTries)
+                root.state = "max";
+            else if (res === PamResult.Failed)
+                root.state = "fail";
+
+            root.flashMsg();
+            stateReset.restart();
+        }
+    }
+
+    PamContext {
+        id: fprint
+
+        property bool available
+        property int tries
+        property int errorTries
+
+        function checkAvail(): void {
+            if (!available || !Config.lock.enableFprint || !root.lock.secure) {
+                abort();
+                return;
+            }
+
+            tries = 0;
+            errorTries = 0;
+            start();
+        }
+
+        config: "fprint"
+        configDirectory: Quickshell.shellDir + "/assets/pam.d"
+
+        onCompleted: res => {
+            if (!available)
+                return;
+
+            if (res === PamResult.Success)
+                return root.lock.unlock();
+
+            if (res === PamResult.Error) {
+                root.fprintState = "error";
+                errorTries++;
+                if (errorTries < 5) {
+                    abort();
+                    errorRetry.restart();
+                }
+            } else if (res === PamResult.MaxTries) {
+                // Isn't actually the real max tries as pam only reports completed
+                // when max tries is reached.
+                tries++;
+                if (tries < Config.lock.maxFprintTries) {
+                    // Restart if not actually real max tries
+                    root.fprintState = "fail";
+                    start();
+                } else {
+                    root.fprintState = "max";
+                    abort();
+                }
+            }
+
+            root.flashMsg();
+            fprintStateReset.start();
+        }
+    }
+
+    Process {
+        id: availProc
+
+        command: ["sh", "-c", "fprintd-list $USER"]
+        onExited: code => {
+            fprint.available = code === 0;
+            fprint.checkAvail();
+        }
+    }
+
+    Timer {
+        id: pamTimeout
+
+        interval: 15000
+        onTriggered: {
+            if (root.greeterMode) {
+                root._log("pamTimeout fired! Cancelling session.");
+                Greetd.cancelSession();
+                root._greetdAuthActive = false;
+            } else {
+                passwd.abort();
+            }
+            root.state = "error";
+            root.flashMsg();
+            stateReset.restart();
+        }
+    }
+
+    Timer {
+        id: errorRetry
+
+        interval: 800
+        onTriggered: fprint.start()
+    }
+
+    Timer {
+        id: stateReset
+
+        interval: 4000
+        onTriggered: {
+            if (root.state !== "max")
+                root.state = "";
+            root._greetdMessage = "";
+        }
+    }
+
+    Timer {
+        id: fprintStateReset
+
+        interval: 4000
+        onTriggered: {
+            root.fprintState = "";
+            fprint.errorTries = 0;
+        }
+    }
+
+    Connections {
+        target: root.lock
+
+        function onSecureChanged(): void {
+            if (root.lock.secure) {
+                availProc.running = true;
+                root.buffer = "";
+                root.state = "";
+                root.fprintState = "";
+                root.lockMessage = "";
+                root._greetdAuthActive = false;
+                root._greetdMessage = "";
+            }
+        }
+
+        function onUnlock(): void {
+            fprint.abort();
+        }
+    }
+
+    Connections {
+        target: Config.lock
+
+        function onEnableFprintChanged(): void {
+            fprint.checkAvail();
+        }
+    }
+}

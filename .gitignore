@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.pkg.tar.zst
+*.pkg.tar.xz
+src/
+pkg/
+nohup.out
+*.log
+.DS_Store
