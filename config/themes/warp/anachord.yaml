@@ -1,0 +1,26 @@
+---
+name: 'Caelestia Theme'
+accent: '#8e4956'
+background: '#fff8f7'
+foreground: '#22191a'
+details: lighter
+cursor: '#76565a'
+terminal_colors:
+  normal:
+    black: '#a19997'
+    red: '#b52750'
+    green: '#c96245'
+    yellow: '#af535a'
+    blue: '#ce6d62'
+    magenta: '#b63e67'
+    cyan: '#9073b8'
+    white: '#272022'
+  bright:
+    black: '#100f0f'
+    red: '#d44167'
+    green: '#f18162'
+    yellow: '#d06e74'
+    blue: '#f78e82'
+    magenta: '#d75880'
+    cyan: '#b193da'
+    white: '#2d2728'
