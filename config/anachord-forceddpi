@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export QS_ICON_THEME="Papirus"
+export XDG_DATA_DIRS="/usr/share:/home/$USER/.local/share"
+export QT_QPA_PLATFORMTHEME="qt5ct"
+dpi=""
+cmd=( )
+while (( "$#" )); do
+  case "$1" in
+    --forced-dpi=*) dpi="${1#*=}"; shift ;;
+    --forced-dpi) dpi="$2"; shift 2 ;;
+    *) cmd+=("$1"); shift ;;
+  esac
+done
+[ -z "$dpi" ] && { echo "Error: --forced-dpi required"; exit 2; }
+scale=$(awk "BEGIN{printf \"%.4f\", $dpi/96.0}")
+export QT_ENABLE_HIGHDPI_SCALING=1
+export QT_AUTO_SCREEN_SCALE_FACTOR=0
+export QT_SCALE_FACTOR="$scale"
+export GDK_DPI_SCALE="$scale"
+[ ${#cmd[@]} -eq 0 ] && cmd=(-c Anachord -d)
+exec quickshell "${cmd[@]}"
