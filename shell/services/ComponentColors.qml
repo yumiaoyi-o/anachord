@@ -538,7 +538,7 @@ Singleton {
             readonly property color normalBg: root.surfaceContainerHigh
             readonly property color criticalText: root.buttonTonalText
             readonly property color normalText: root.textPrimary
-            readonly property color criticalBody: root.accentSecondary
+            readonly property color criticalBody: root.accentPrimary
             readonly property color normalBody: root.panelBorder
             readonly property color time: root.panelBorder
         }
@@ -581,16 +581,16 @@ Singleton {
             readonly property color text: root.textSecondary
 
             readonly property QtObject status: QtObject {
-                readonly property color activeBg: root.accentSecondary
-                readonly property color activeIcon: root.fgAccentSecondary
+                readonly property color activeBg: root.accentPrimary
+                readonly property color activeIcon: root.fgAccentPrimary
                 readonly property color mutedBg: root.buttonTonalBg
                 readonly property color mutedIcon: root.buttonTonalText
             }
         }
 
         readonly property QtObject toggle: QtObject {
-            readonly property color activeBg: root.accentSecondary
-            readonly property color activeIcon: root.fgAccentSecondary
+            readonly property color activeBg: root.accentPrimary
+            readonly property color activeIcon: root.fgAccentPrimary
             readonly property color inactiveBg: root.buttonTonalBg
             readonly property color inactiveIcon: root.buttonTonalText
             readonly property color label: root.textSecondary
@@ -618,9 +618,9 @@ Singleton {
             readonly property color warningIconBg: root.buttonTonalBg
             readonly property color warningIconFg: root.buttonTonalText
             readonly property color defaultTitle: root.textPrimary
-            readonly property color warningTitle: root.fgAccentSecondary
+            readonly property color warningTitle: root.fgAccentPrimary
             readonly property color defaultBody: root.textSecondary
-            readonly property color warningBody: root.fgAccentSecondary
+            readonly property color warningBody: root.fgAccentPrimary
         }
 
         readonly property QtObject modal: QtObject {

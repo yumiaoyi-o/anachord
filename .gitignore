@@ -6,8 +6,8 @@ dist/
 build/
 *.pkg.tar.zst
 *.pkg.tar.xz
-src/
-pkg/
+/src/
+/pkg/
 nohup.out
 *.log
 .DS_Store

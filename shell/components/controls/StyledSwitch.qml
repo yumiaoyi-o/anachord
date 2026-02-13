@@ -24,7 +24,7 @@ Switch {
             readonly property real nonAnimWidth: root.pressed ? implicitHeight * 1.3 : implicitHeight
 
             radius: Appearance.rounding.full
-            color: root.checked ? ComponentColors.region.panel.onAccent : ComponentColors.region.panel.toggle.thumb
+            color: ComponentColors.region.panel.toggle.thumb
 
             x: root.checked ? parent.implicitWidth - nonAnimWidth - Appearance.padding.small / 2 : Appearance.padding.small / 2
             implicitWidth: nonAnimWidth

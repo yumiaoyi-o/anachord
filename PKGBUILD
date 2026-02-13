@@ -1,7 +1,7 @@
 # Maintainer: yumiaoyi-o <yumiaoyio@outlook.com>
 pkgname=anachord-shell
 pkgver=1.0.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Anachord - A white & red themed Quickshell desktop shell'
 arch=('x86_64')
 url='https://github.com/yumiaoyi-o/anachord'
@@ -29,11 +29,32 @@ depends=(
   'qt6-declarative'
   'python'
 )
+makedepends=(
+  'cmake'
+  'qt6-base'
+  'qt6-declarative'
+  'pkgconf'
+)
 provides=('anachord-shell' 'anachord-cli')
 conflicts=('vermilion-shell' 'vermilion-cli' 'caelestia-shell' 'caelestia-cli')
 
+build() {
+  cd "$srcdir/.."
+  cmake -B build -S . \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DVERSION="$pkgver" \
+    -DGIT_REVISION="$pkgver" \
+    -DDISTRIBUTOR=Anachord \
+    -DENABLE_MODULES="plugin" \
+    -DCMAKE_INSTALL_PREFIX=/
+  cmake --build build
+}
+
 package() {
   cd "$srcdir/.."
+
+  # Install C++ QML plugins
+  DESTDIR="$pkgdir" cmake --install build
 
   # Install CLI Python package
   install -dm755 "$pkgdir/usr/lib/python3.14/site-packages"
