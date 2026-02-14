@@ -11,7 +11,6 @@ JsonObject {
     property real brightnessIncrement: 0.1
     property real maxVolume: 1.0
     property bool dynamicColors: true
-    property bool smartScheme: true
     property string defaultPlayer: "Spotify"
     property list<var> playerAliases: [
         {

@@ -69,7 +69,7 @@ DeviceList {
 
             ToggleButton {
                 toggled: Nmcli.scanning
-                icon: "wifi_find"
+                icon: "search"
                 accent: "Primary"
                 iconSize: Appearance.font.size.normal
                 horizontalPadding: Appearance.padding.normal

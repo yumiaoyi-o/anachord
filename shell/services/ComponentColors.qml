@@ -246,7 +246,7 @@ Singleton {
         readonly property color border: root.panelBorder
 
         readonly property color accent: root.accentPrimary
-        readonly property color onAccent: root.fgAccentPrimary
+        readonly property color onAccent: root.textOnAccent
         readonly property color accentSecondary: root.accentSecondary
         readonly property color onAccentSecondary: root.fgAccentSecondary
         readonly property color accentContainer: root.accentContainer
@@ -475,7 +475,7 @@ Singleton {
         readonly property color subtext: root.textSecondary
         readonly property color disabledText: root.textDisabled
         readonly property color accent: root.accentPrimary
-        readonly property color onAccent: root.fgAccentPrimary
+        readonly property color onAccent: root.textOnAccent
         readonly property color accentSecondary: root.accentSecondary
         readonly property color accentTertiary: root.accentTertiary
         readonly property color border: root.panelBorder
@@ -582,7 +582,7 @@ Singleton {
 
             readonly property QtObject status: QtObject {
                 readonly property color activeBg: root.accentPrimary
-                readonly property color activeIcon: root.fgAccentPrimary
+                readonly property color activeIcon: root.textOnAccent
                 readonly property color mutedBg: root.buttonTonalBg
                 readonly property color mutedIcon: root.buttonTonalText
             }
@@ -590,7 +590,7 @@ Singleton {
 
         readonly property QtObject toggle: QtObject {
             readonly property color activeBg: root.accentPrimary
-            readonly property color activeIcon: root.fgAccentPrimary
+            readonly property color activeIcon: root.textOnAccent
             readonly property color inactiveBg: root.buttonTonalBg
             readonly property color inactiveIcon: root.buttonTonalText
             readonly property color label: root.textSecondary
@@ -605,7 +605,7 @@ Singleton {
 
         readonly property QtObject action: QtObject {
             readonly property color accent: root.accentPrimary
-            readonly property color onAccent: root.fgAccentPrimary
+            readonly property color onAccent: root.textOnAccent
         }
 
         readonly property QtObject toast: QtObject {

@@ -473,7 +473,6 @@
     "audioIncrement": 0.1,
     "maxVolume": 1,
     "dynamicColors": false,
-    "smartScheme": true,
     "defaultPlayer": "Spotify",
     "playerAliases": [
       {

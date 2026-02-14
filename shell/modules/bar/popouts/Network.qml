@@ -193,7 +193,7 @@ ColumnLayout {
 
                 Layout.topMargin: Math.round(fontInfo.pointSize * 0.0575)
                 animate: true
-                text: "wifi_find"
+                    text: "search"
                 color: ComponentColors.region.bar.onAccent
             }
 

@@ -154,20 +154,20 @@ Singleton {
 
     function load(data: string, isPreview: bool): void {
         const colours = isPreview ? preview : current;
-        const scheme = JSON.parse(data);
+        const state = JSON.parse(data);
+        const mode = state.mode ?? "dark";
+        const colourMap = state.colours ?? {};
 
-        // When dynamic colors are disabled and scheme is dynamic,
-        // reset palette back to defaults instead of loading wallpaper colors
-        // Choose mode-appropriate defaults
-        const defaults = (scheme.mode === "dark") ? _defaultsDark : _defaults;
+        // When dynamic colors are disabled, reset palette back to defaults
+        const defaults = (mode === "dark") ? _defaultsDark : _defaults;
 
-        if (scheme.name === "dynamic" && !Config.services.dynamicColors) {
+        if (!Config.services.dynamicColors) {
             if (!isPreview)
-                currentLight = scheme.mode === "light";
+                currentLight = mode === "light";
             let setCount = 0;
             let failCount = 0;
             // Restore all palette properties from mode-appropriate defaults
-            for (const [name, ] of Object.entries(scheme.colours)) {
+            for (const [name, ] of Object.entries(colourMap)) {
                 const propName = name.startsWith("term") ? name : `m3${name}`;
                 const hasC = colours.hasOwnProperty(propName);
                 const hasD = defaults.hasOwnProperty(propName);
@@ -183,12 +183,12 @@ Singleton {
         }
 
         if (!isPreview) {
-            currentLight = scheme.mode === "light";
+            currentLight = mode === "light";
         } else {
-            previewLight = scheme.mode === "light";
+            previewLight = mode === "light";
         }
 
-        for (const [name, colour] of Object.entries(scheme.colours)) {
+        for (const [name, colour] of Object.entries(colourMap)) {
             const propName = name.startsWith("term") ? name : `m3${name}`;
             if (colours.hasOwnProperty(propName))
                 colours[propName] = `#${colour}`;
@@ -196,7 +196,7 @@ Singleton {
     }
 
     function setMode(mode: string): void {
-        Quickshell.execDetached(["/usr/bin/python", "-m", "anachord", "scheme", "set", "--notify", "-m", mode]);
+        Quickshell.execDetached(["anachord", "scheme", "set", "--notify", "-m", mode]);
     }
 
     FileView {

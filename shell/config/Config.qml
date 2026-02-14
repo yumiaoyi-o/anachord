@@ -421,7 +421,6 @@ Singleton {
             audioIncrement: services.audioIncrement,
             maxVolume: services.maxVolume,
             dynamicColors: services.dynamicColors,
-            smartScheme: services.smartScheme,
             defaultPlayer: services.defaultPlayer,
             playerAliases: services.playerAliases
         };

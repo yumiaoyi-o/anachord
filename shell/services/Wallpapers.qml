@@ -11,7 +11,6 @@ Searcher {
     id: root
 
     readonly property string currentNamePath: `${Paths.state}/wallpaper/path.txt`
-    readonly property list<string> smartArg: Config.services.smartScheme ? [] : ["--no-smart"]
 
     property bool showPreview: false
     readonly property string current: showPreview ? previewPath : actualCurrent
@@ -21,7 +20,7 @@ Searcher {
 
     function setWallpaper(path: string): void {
         actualCurrent = path;
-        Quickshell.execDetached(["anachord", "wallpaper", "-f", path, ...smartArg]);
+        Quickshell.execDetached(["anachord", "wallpaper", "-f", path]);
     }
 
     function preview(path: string): void {

@@ -63,7 +63,7 @@ StyledRect {
             id: toggleBtnIcon
 
             visible: !!text
-            fill: root.toggled ? 1 : 0
+            fill: 0
             text: root.icon
             color: root.toggled ? ComponentColors.region.panel.onAccent : ComponentColors.region.panel.text
             font.pointSize: root.iconSize

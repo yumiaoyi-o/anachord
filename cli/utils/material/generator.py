@@ -4,15 +4,7 @@ from materialyoucolor.dynamiccolor.material_dynamic_colors import (
     MaterialDynamicColors,
 )
 from materialyoucolor.hct import Hct
-from materialyoucolor.scheme.scheme_content import SchemeContent
-from materialyoucolor.scheme.scheme_expressive import SchemeExpressive
-from materialyoucolor.scheme.scheme_fidelity import SchemeFidelity
-from materialyoucolor.scheme.scheme_fruit_salad import SchemeFruitSalad
-from materialyoucolor.scheme.scheme_monochrome import SchemeMonochrome
-from materialyoucolor.scheme.scheme_neutral import SchemeNeutral
-from materialyoucolor.scheme.scheme_rainbow import SchemeRainbow
 from materialyoucolor.scheme.scheme_tonal_spot import SchemeTonalSpot
-from materialyoucolor.scheme.scheme_vibrant import SchemeVibrant
 from materialyoucolor.utils.math_utils import difference_degrees, rotation_direction, sanitize_degrees_double
 
 
@@ -145,33 +137,13 @@ def darken(colour: Hct, amount: float) -> Hct:
     return Hct.from_hct(colour.hue, colour.chroma + diff / 5, colour.tone - diff)
 
 
-def get_scheme(scheme: str) -> DynamicScheme:
-    if scheme == "content":
-        return SchemeContent
-    if scheme == "expressive":
-        return SchemeExpressive
-    if scheme == "fidelity":
-        return SchemeFidelity
-    if scheme == "fruitsalad":
-        return SchemeFruitSalad
-    if scheme == "monochrome":
-        return SchemeMonochrome
-    if scheme == "neutral":
-        return SchemeNeutral
-    if scheme == "rainbow":
-        return SchemeRainbow
-    if scheme == "tonalspot":
-        return SchemeTonalSpot
-    return SchemeVibrant
-
-
 def gen_scheme(scheme, primary: Hct) -> dict[str, str]:
     light = scheme.mode == "light"
 
     colours = {}
 
     # Material colours
-    primary_scheme = get_scheme(scheme.variant)(primary, not light, 0)
+    primary_scheme = SchemeTonalSpot(primary, not light, 0)
     for colour in vars(MaterialDynamicColors).keys():
         colour_name = getattr(MaterialDynamicColors, colour)
         if hasattr(colour_name, "get_hct"):
@@ -179,31 +151,18 @@ def gen_scheme(scheme, primary: Hct) -> dict[str, str]:
 
     # Harmonize terminal colours
     for i, hct in enumerate(light_gruvbox if light else dark_gruvbox):
-        if scheme.variant == "monochrome":
-            colours[f"term{i}"] = grayscale(hct, light)
-        else:
-            colours[f"term{i}"] = harmonize(
-                hct, colours["primary_paletteKeyColor"], (0.35 if i < 8 else 0.2) * (-1 if light else 1)
-            )
+        colours[f"term{i}"] = harmonize(
+            hct, colours["primary_paletteKeyColor"], (0.35 if i < 8 else 0.2) * (-1 if light else 1)
+        )
 
     # Harmonize named colours
     for i, hct in enumerate(light_catppuccin if light else dark_catppuccin):
-        if scheme.variant == "monochrome":
-            colours[colour_names[i]] = grayscale(hct, light)
-        else:
-            colours[colour_names[i]] = harmonize(hct, colours["primary_paletteKeyColor"], (-0.2 if light else 0.05))
+        colours[colour_names[i]] = harmonize(hct, colours["primary_paletteKeyColor"], (-0.2 if light else 0.05))
 
     # KColours
     for colour in kcolours:
         colours[colour["name"]] = harmonize(colour["hct"], colours["primary"], 0.1)
         colours[f"{colour['name']}Selection"] = harmonize(colour["hct"], colours["onPrimaryFixedVariant"], 0.1)
-        if scheme.variant == "monochrome":
-            colours[colour["name"]] = grayscale(colours[colour["name"]], light)
-            colours[f"{colour['name']}Selection"] = grayscale(colours[f"{colour['name']}Selection"], light)
-
-    if scheme.variant == "neutral":
-        for name, hct in colours.items():
-            colours[name].chroma -= 15
 
     # FIXME: deprecated stuff
     colours["text"] = colours["onBackground"]

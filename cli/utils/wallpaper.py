@@ -77,13 +77,9 @@ def get_smart_opts(wall: Path, cache: Path) -> str:
     except (IOError, json.JSONDecodeError):
         pass
 
-    from anachord.utils.colourfulness import get_variant
-
     opts = {}
 
     with Image.open(get_thumb(wall, cache)) as img:
-        opts["variant"] = get_variant(img)
-
         img.thumbnail((1, 1), Image.LANCZOS)
         hct = Hct.from_int(argb_from_rgb(*img.getpixel((0, 0))))
         opts["mode"] = "light" if hct.tone > 60 else "dark"
@@ -99,25 +95,12 @@ def get_colours_for_wall(wall: Path | str, no_smart: bool) -> None:
     scheme = get_scheme()
     cache = wallpapers_cache_dir / compute_hash(wall)
 
-    name = "dynamic"
-
     if not no_smart:
         smart_opts = get_smart_opts(wall, cache)
-        scheme = Scheme(
-            {
-                "name": name,
-                "flavour": "default",
-                "mode": smart_opts["mode"],
-                "variant": smart_opts["variant"],
-                "colours": scheme.colours,
-            }
-        )
+        scheme = Scheme({"mode": smart_opts["mode"], "colours": scheme.colours})
 
     return {
-        "name": name,
-        "flavour": "default",
         "mode": scheme.mode,
-        "variant": scheme.variant,
         "colours": get_colours_for_image(get_thumb(wall, cache), scheme),
     }
 
@@ -146,11 +129,10 @@ def set_wallpaper(wall: Path | str, no_smart: bool) -> None:
 
     scheme = get_scheme()
 
-    # Change mode and variant based on wallpaper colour
-    if scheme.name == "dynamic" and not no_smart:
+    # Optionally adapt mode based on wallpaper colour
+    if not no_smart:
         smart_opts = get_smart_opts(wall, cache)
         scheme.mode = smart_opts["mode"]
-        scheme.variant = smart_opts["variant"]
 
     # Update colours
     scheme.update_colours()

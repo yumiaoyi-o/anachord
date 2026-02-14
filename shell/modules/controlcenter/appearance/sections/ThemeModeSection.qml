@@ -33,16 +33,6 @@ CollapsibleSection {
         }
     }
 
-    SwitchRow {
-        label: qsTr("Smart detection")
-        checked: Config.services.smartScheme
-        visible: Colours.dynamic
-        onToggled: checked => {
-            Config.services.smartScheme = checked;
-            Config.save();
-        }
-    }
-
     RowLayout {
         Layout.fillWidth: true
         spacing: Appearance.spacing.normal
