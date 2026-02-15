@@ -23,7 +23,7 @@ Item {
         radius: Appearance.rounding.full
 
         function onClicked(): void {
-            lockProc.running = true;
+            Quickshell.execDetached(["/usr/bin/qs", "ipc", "call", "-c", "Anachord", "lock", "lock"]);
         }
     }
 
@@ -39,10 +39,4 @@ Item {
         font.pointSize: Appearance.font.size.normal
     }
 
-    Process {
-        id: lockProc
-
-        command: ["qs", "ipc", "-c", "Anachord", "call", "lock", "lock"]
-        running: false
-    }
 }

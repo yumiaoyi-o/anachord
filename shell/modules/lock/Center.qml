@@ -355,7 +355,7 @@ ColumnLayout {
 
                 StateLayer {
                     color: root.lock.pam.buffer
-                        ? ComponentColors.region.lock.onAccent
+                        ? "#FFFFFF"
                         : ComponentColors.region.lock.text
 
                     function onClicked(): void {
@@ -368,7 +368,7 @@ ColumnLayout {
                     anchors.centerIn: parent
                     text: "arrow_forward"
                     color: root.lock.pam.buffer
-                        ? ComponentColors.region.lock.onAccent
+                        ? "#FFFFFF"
                         : ComponentColors.region.lock.disabledText
                     font.pointSize: Appearance.font.size.normal
                 }
