@@ -44,7 +44,7 @@ Item {
         property real breath: 0.5 + 0.5 * Math.sin(phase * 0.8)
         property double lastTickMs: 0
         readonly property int sampleStep: {
-            const base = Math.max(2, Math.round(height / 480));
+            const base = Math.max(2, Math.round(height / 320));
             return root.isPlaying ? base : base + 1;
         }
         property var sampleY: []
