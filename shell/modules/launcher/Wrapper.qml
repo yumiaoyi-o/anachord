@@ -96,7 +96,7 @@ Item {
         onRunningChanged: {
             if (running && !root.shouldBeActive) {
                 content.visible = false;
-                content.active = true;
+                content.active = false;
             } else {
                 root.contentHeight = Math.min(root.maxHeight, content.implicitHeight);
                 content.active = Qt.binding(() => root.shouldBeActive || root.visible);

@@ -113,13 +113,7 @@ ClippingRectangle {
             if (!layout.initialOpeningComplete) {
                 shouldBeActive = isActivePane;
             } else {
-                if (diff <= 1) {
-                    shouldBeActive = true;
-                } else if (pane.hasBeenLoaded) {
-                    shouldBeActive = true;
-                } else {
-                    shouldBeActive = layout.animationComplete;
-                }
+                shouldBeActive = diff <= 1 || (!layout.animationComplete && diff <= 2);
             }
 
             loader.active = shouldBeActive;

@@ -67,8 +67,8 @@ Item {
         property real wavePhase: 0
         
         Timer {
-            running: Players.active?.isPlaying ?? false
-            interval: 33
+            running: root.visible && (Players.active?.isPlaying ?? false)
+            interval: 50
             repeat: true
             onTriggered: {
                 cover.wavePhase = (cover.wavePhase + 0.12) % (2 * Math.PI);
@@ -107,7 +107,7 @@ Item {
                 var phase = cover.wavePhase;
 
                 // Draw concentric circles with inverse square opacity and wave modulation
-                var steps = 80;
+                var steps = 48;
                 for (var i = steps; i >= 0; i--) {
                     var t = i / steps;  // 0 at center, 1 at edge
                     var r = t * maxRadius;

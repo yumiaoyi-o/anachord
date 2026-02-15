@@ -79,7 +79,7 @@ Item {
     Timer {
         id: timer
 
-        running: true
+        running: false
         interval: Appearance.anim.durations.extraLarge
         onTriggered: {
             content.active = Qt.binding(() => (root.visibilities.dashboard && Config.dashboard.enabled) || root.visible);
@@ -94,7 +94,9 @@ Item {
         anchors.bottom: parent.bottom
 
         visible: false
-        active: true
+        active: false
+
+        Component.onCompleted: timer.start()
 
         sourceComponent: Content {
             visibilities: root.visibilities

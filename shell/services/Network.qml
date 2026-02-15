@@ -171,6 +171,27 @@ Singleton {
         function onSavedConnectionSsidsChanged() {
             root.savedConnectionSsids = Nmcli.savedConnectionSsids;
         }
+        function onNetworksChanged() {
+            networkSyncDebounce.restart();
+        }
+        function onEthernetDevicesChanged() {
+            networkSyncDebounce.restart();
+        }
+        function onWifiEnabledChanged() {
+            root.wifiEnabled = Nmcli.wifiEnabled;
+        }
+    }
+
+    Timer {
+        id: networkSyncDebounce
+
+        interval: 250
+        repeat: false
+        onTriggered: {
+            syncNetworksFromNmcli();
+            root.ethernetDevices = Nmcli.ethernetDevices;
+            root.ethernetDeviceCount = Nmcli.ethernetDevices.length;
+        }
     }
 
     function syncNetworksFromNmcli(): void {
@@ -309,16 +330,4 @@ Singleton {
         return octets.join(".");
     }
 
-    Process {
-        running: true
-        command: ["nmcli", "m"]
-        stdout: SplitParser {
-            onRead: {
-                Nmcli.getNetworks(() => {
-                    syncNetworksFromNmcli();
-                });
-                getEthernetDevices();
-            }
-        }
-    }
 }

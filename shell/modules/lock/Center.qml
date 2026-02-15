@@ -91,7 +91,7 @@ ColumnLayout {
 
             Timer {
                 interval: 1000
-                running: true
+                running: root.visible
                 repeat: true
                 onTriggered: {
                     const now = new Date();
@@ -112,7 +112,7 @@ ColumnLayout {
 
             Timer {
                 interval: 60000
-                running: true
+                running: root.visible
                 repeat: true
                 onTriggered: dateText.text = Qt.formatDate(new Date(), "yyyy年M月d日 dddd")
             }
@@ -149,7 +149,7 @@ ColumnLayout {
 
                 property real value: 0.15
 
-                running: true
+                running: root.visible
                 loops: Animation.Infinite
 
                 NumberAnimation {
@@ -594,6 +594,7 @@ ColumnLayout {
         property real phase: 0
         property real phaseSpeed: 0.018
         property real breath: 0.5 + 0.5 * Math.sin(phase * 0.8)
+        property double lastTickMs: 0
 
         property real smoothN: Config.bar.mediaLines.lineCount
         property real targetN: Config.bar.mediaLines.lineCount
@@ -611,12 +612,22 @@ ColumnLayout {
         ServiceRef { service: Audio.cava }
 
         Timer {
-            running: true; interval: 33; repeat: true
+            running: root.visible
+            interval: miniWave.isPlaying ? 33 : 66
+            repeat: true
             onTriggered: {
+                var nowMs = Date.now();
+                if (miniWave.lastTickMs <= 0)
+                    miniWave.lastTickMs = nowMs;
+                var dt = Math.max(16, Math.min(120, nowMs - miniWave.lastTickMs));
+                miniWave.lastTickMs = nowMs;
+                var frameScale = dt / 33.0;
+
                 var targetSpeed = miniWave.isPlaying ? 0.045 : 0.018;
                 miniWave.phaseSpeed += (targetSpeed - miniWave.phaseSpeed) * 0.03;
-                miniWave.phase += miniWave.phaseSpeed;
-                miniWave.smoothN += (miniWave.targetN - miniWave.smoothN) * 0.02;
+                miniWave.phase += miniWave.phaseSpeed * frameScale;
+                var smoothK = 1.0 - Math.pow(1.0 - 0.02, frameScale);
+                miniWave.smoothN += (miniWave.targetN - miniWave.smoothN) * smoothK;
                 miniWave.requestPaint();
             }
         }

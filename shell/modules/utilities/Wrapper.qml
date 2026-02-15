@@ -70,7 +70,7 @@ Item {
     Timer {
         id: timer
 
-        running: true
+        running: false
         interval: Appearance.anim.durations.extraLarge
         onTriggered: {
             content.active = Qt.binding(() => root.shouldBeActive || root.visible);
@@ -86,7 +86,9 @@ Item {
         anchors.margins: Appearance.padding.large
 
         visible: false
-        active: true
+        active: false
+
+        Component.onCompleted: timer.start()
 
         sourceComponent: Content {
             implicitWidth: root.implicitWidth - Appearance.padding.large * 2

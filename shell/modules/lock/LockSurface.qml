@@ -23,6 +23,7 @@ WlSessionLockSurface {
     // Shared breathing phase for colon dots & power buttons
     property real breathPhase: 0.3
     SequentialAnimation on breathPhase {
+        running: root.visible && root.lock.locked
         loops: Animation.Infinite
         NumberAnimation { from: 0.3; to: 1.0; duration: 2000; easing.type: Easing.InOutSine }
         NumberAnimation { from: 1.0; to: 0.3; duration: 2000; easing.type: Easing.InOutSine }
@@ -232,7 +233,7 @@ WlSessionLockSurface {
 
         Timer {
             interval: 16
-            running: true
+            running: root.visible && root.lock.locked
             repeat: true
             onTriggered: {
                 wavesShader.uTime += 16;

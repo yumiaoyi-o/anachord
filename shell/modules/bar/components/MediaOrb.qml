@@ -22,6 +22,7 @@ Item {
         id: canvas
         anchors.fill: parent
         antialiasing: true
+        renderStrategy: Canvas.Threaded
 
         property real smoothAudio: 0
         property real rawAudio: {
@@ -41,6 +42,11 @@ Item {
         property real phase: 0
         property real phaseSpeed: 0.018
         property real breath: 0.5 + 0.5 * Math.sin(phase * 0.8)
+        property double lastTickMs: 0
+        property int sampleStep: 2
+        property var sampleY: []
+        property var sampleConv: []
+        property var sampleEnv: []
 
           // Smooth line count for time mode (fractional, for fade-in/out)
           property real smoothN: Config.bar.mediaLines.lineCount
@@ -61,20 +67,60 @@ Item {
         onC1rChanged: requestPaint()
         onC2rChanged: requestPaint()
         onC3rChanged: requestPaint()
+        onHeightChanged: rebuildSamples()
 
         ServiceRef { service: Audio.cava }
 
         Timer {
-            running: true; interval: 33; repeat: true
+            running: true
+            interval: root.isPlaying ? 33 : 66
+            repeat: true
             onTriggered: {
+                var nowMs = Date.now();
+                if (canvas.lastTickMs <= 0)
+                    canvas.lastTickMs = nowMs;
+                var dt = Math.max(16, Math.min(120, nowMs - canvas.lastTickMs));
+                canvas.lastTickMs = nowMs;
+                var frameScale = dt / 33.0;
+
                 var targetSpeed = root.isPlaying ? 0.045 : 0.018;
                 canvas.phaseSpeed += (targetSpeed - canvas.phaseSpeed) * 0.03;
-                canvas.phase += canvas.phaseSpeed;
+                canvas.phase += canvas.phaseSpeed * frameScale;
                 // Smooth line count transition
-                canvas.smoothN += (canvas.targetN - canvas.smoothN) * 0.02;
+                var smoothK = 1.0 - Math.pow(1.0 - 0.02, frameScale);
+                canvas.smoothN += (canvas.targetN - canvas.smoothN) * smoothK;
                 canvas.requestPaint();
             }
         }
+
+        function rebuildSamples() {
+            var h = height;
+            var step = sampleStep;
+            if (h <= 0 || step <= 0) {
+                sampleY = [];
+                sampleConv = [];
+                sampleEnv = [];
+                return;
+            }
+
+            var ys = [];
+            var convs = [];
+            var envs = [];
+            for (var y = 0; y <= h; y += step) {
+                var yn = y / h;
+                var sinBase = Math.sin(yn * Math.PI);
+                ys.push(y);
+                convs.push(Math.pow(sinBase, 2.0));
+                envs.push(Math.pow(sinBase, 2.5));
+            }
+
+            sampleY = ys;
+            sampleConv = convs;
+            sampleEnv = envs;
+        }
+
+        Component.onCompleted: rebuildSamples()
+
         function lerp(a, b, t) { return a + (b - a) * t; }
         function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
         function rgba(r1,g1,b1, r2,g2,b2, t, a) {
@@ -107,7 +153,16 @@ Item {
             var ga = Config.bar.mediaLines.glowOpacity / 100;
             var ma = Config.bar.mediaLines.mediumOpacity / 100;
             var ca = Config.bar.mediaLines.coreOpacity / 100;
-            var step = 2;
+            var ys = sampleY;
+            var convs = sampleConv;
+            var envs = sampleEnv;
+            if (!ys || ys.length === 0) {
+                rebuildSamples();
+                ys = sampleY;
+                convs = sampleConv;
+                envs = sampleEnv;
+                if (!ys || ys.length === 0) return;
+            }
             var pad = 1.5;
             var halfW = (w - pad * 2) * 0.5; // usable half-width from center
             var spread = w * 0.45;
@@ -115,14 +170,23 @@ Item {
             // SiriWave-style attenuation: soft wall that absorbs energy
             // K controls wall hardness (higher = harder wall, more punch)
             var K = 3.5 + au * 1.5; // 3.5 idle → 5 at full audio
+            var wallTableSize = 128;
+            var wallTable = [];
+            for (var wi = 0; wi <= wallTableSize; wi++) {
+                var wx = wi / wallTableSize;
+                wallTable.push(Math.pow(K / (K + Math.pow(wx, K)), K));
+            }
+
             function softWall(px) {
-                // x = normalized distance from center: 0 (center) → 1 (wall)
                 var x = (px - cx) / halfW;
-                // Attenuation: pow(K/(K+|x|^K), K) compresses toward center
-                // At x=0: att=1 (no effect). At |x|=1: att≈0.15. Beyond: rapidly→0
                 var ax = Math.abs(x);
-                var att = Math.pow(K / (K + Math.pow(ax, K)), K);
-                // Apply: remap displacement through attenuation
+                if (ax >= 1.0)
+                    ax = 1.0;
+                var idx = ax * wallTableSize;
+                var i0 = Math.floor(idx);
+                var i1 = Math.min(wallTableSize, i0 + 1);
+                var tL = idx - i0;
+                var att = wallTable[i0] + (wallTable[i1] - wallTable[i0]) * tL;
                 return cx + x * halfW * att;
             }
 
@@ -175,14 +239,11 @@ Item {
 
                     ctx.beginPath();
                     var first = true;
-                    for (var y = 0; y <= h; y += step) {
-                        var yn = y / h;
-                        var sinBase = Math.sin(yn * Math.PI);
-
-                        // Higher exponents → sharper pointed tips at both ends
-                        var conv = Math.pow(sinBase, 2.0);
+                    for (var yi = 0; yi < ys.length; yi++) {
+                        var y = ys[yi];
+                        var conv = convs[yi];
                         var ox = baseOx * conv;
-                        var env = Math.pow(sinBase, 2.5);
+                        var env = envs[yi];
 
                         var w1 = Math.sin(y * f1 + p + po);
                         var w2 = Math.sin(y * f2 - p * 0.7 + po * 0.5) * 0.55;
