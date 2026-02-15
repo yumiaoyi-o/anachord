@@ -43,7 +43,10 @@ Item {
         property real phaseSpeed: 0.018
         property real breath: 0.5 + 0.5 * Math.sin(phase * 0.8)
         property double lastTickMs: 0
-        property int sampleStep: 2
+        readonly property int sampleStep: {
+            const base = Math.max(2, Math.round(height / 480));
+            return root.isPlaying ? base : base + 1;
+        }
         property var sampleY: []
         property var sampleConv: []
         property var sampleEnv: []
@@ -68,11 +71,12 @@ Item {
         onC2rChanged: requestPaint()
         onC3rChanged: requestPaint()
         onHeightChanged: rebuildSamples()
+        onSampleStepChanged: rebuildSamples()
 
         ServiceRef { service: Audio.cava }
 
         Timer {
-            running: true
+            running: root.visible
             interval: root.isPlaying ? 33 : 66
             repeat: true
             onTriggered: {
