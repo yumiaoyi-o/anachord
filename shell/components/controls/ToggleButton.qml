@@ -18,6 +18,7 @@ StyledRect {
     property real horizontalPadding: Appearance.padding.large
     property real verticalPadding: Appearance.padding.normal
     property string tooltip: ""
+    readonly property color toggledForeground: ComponentColors.textOnAccent
 
     property bool hovered: false
     signal clicked
@@ -46,7 +47,7 @@ StyledRect {
     StateLayer {
         id: toggleStateLayer
 
-        color: root.toggled ? ComponentColors.region.panel.onAccent : ComponentColors.region.panel.text
+        color: root.toggled ? root.toggledForeground : ComponentColors.region.panel.text
 
         function onClicked(): void {
             root.clicked();
@@ -65,7 +66,7 @@ StyledRect {
             visible: !!text
             fill: 0
             text: root.icon
-            color: root.toggled ? ComponentColors.region.panel.onAccent : ComponentColors.region.panel.text
+            color: root.toggled ? root.toggledForeground : ComponentColors.region.panel.text
             font.pointSize: root.iconSize
 
             Behavior on fill {
@@ -79,7 +80,7 @@ StyledRect {
 
             sourceComponent: StyledText {
                 text: root.label
-                color: root.toggled ? ComponentColors.region.panel.onAccent : ComponentColors.region.panel.text
+                color: root.toggled ? root.toggledForeground : ComponentColors.region.panel.text
             }
         }
     }

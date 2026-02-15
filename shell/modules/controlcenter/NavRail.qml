@@ -168,13 +168,13 @@ Item {
             id: background
 
             radius: Appearance.rounding.full
-            color: Qt.alpha(ComponentColors.region.panel.accent, item.active ? 1 : 0)
+            color: "transparent"
 
             implicitWidth: icon.implicitWidth + icon.anchors.leftMargin * 2
             implicitHeight: icon.implicitHeight + Appearance.padding.small
 
             StateLayer {
-                color: item.active ? ComponentColors.region.panel.onAccent : ComponentColors.region.panel.text
+                color: item.active ? ComponentColors.region.dashboard.tabs.activeIcon : ComponentColors.region.dashboard.tabs.inactiveIcon
 
                 function onClicked(): void {
                     // Prevent tab switching during initial opening animation to avoid blank pages
@@ -193,7 +193,7 @@ Item {
                 anchors.leftMargin: Appearance.padding.large
 
                 text: item.icon
-                color: item.active ? ComponentColors.region.panel.onAccent : ComponentColors.region.panel.text
+                color: item.active ? ComponentColors.region.dashboard.tabs.activeIcon : ComponentColors.region.dashboard.tabs.inactiveIcon
                 font.pointSize: Appearance.font.size.large
                 fill: item.active ? 1 : 0
 
@@ -211,7 +211,7 @@ Item {
 
                 opacity: 0
                 text: item.label
-                color: item.active ? ComponentColors.region.panel.onAccent : ComponentColors.region.panel.text
+                color: item.active ? ComponentColors.region.dashboard.tabs.activeLabel : ComponentColors.region.dashboard.tabs.inactiveLabel
                 font.capitalization: Font.Capitalize
             }
 
@@ -224,6 +224,7 @@ Item {
 
                 text: item.label
                 font.pointSize: Appearance.font.size.small
+                color: item.active ? ComponentColors.region.dashboard.tabs.activeLabel : ComponentColors.region.dashboard.tabs.inactiveLabel
                 font.capitalization: Font.Capitalize
             }
         }
