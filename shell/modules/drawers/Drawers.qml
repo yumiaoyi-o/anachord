@@ -12,6 +12,10 @@ import QtQuick
 import QtQuick.Effects
 
 Variants {
+    id: root
+
+    required property var lock
+
     model: Quickshell.screens
 
     Scope {
@@ -187,6 +191,7 @@ Variants {
                     screen: scope.modelData
                     visibilities: visibilities
                     popouts: panels.popouts
+                    lock: root.lock
 
                     disabled: scope.barDisabled
 

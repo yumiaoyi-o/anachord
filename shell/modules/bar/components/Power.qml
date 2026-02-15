@@ -9,6 +9,7 @@ Item {
     id: root
 
     required property PersistentProperties visibilities
+    required property var lock
 
     implicitWidth: icon.implicitHeight + Appearance.padding.small * 2
     implicitHeight: icon.implicitHeight
@@ -23,7 +24,8 @@ Item {
         radius: Appearance.rounding.full
 
         function onClicked(): void {
-            Quickshell.execDetached(["/usr/bin/qs", "ipc", "call", "-c", "Anachord", "lock", "lock"]);
+            if (root.lock)
+                root.lock.locked = true;
         }
     }
 

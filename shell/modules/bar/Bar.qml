@@ -15,6 +15,7 @@ ColumnLayout {
     required property ShellScreen screen
     required property PersistentProperties visibilities
     required property BarPopouts.Wrapper popouts
+    required property var lock
     readonly property int vPadding: Appearance.padding.large
 
     function closeTray(): void {
@@ -159,6 +160,7 @@ ColumnLayout {
                 delegate: WrappedLoader {
                     sourceComponent: Power {
                         visibilities: root.visibilities
+                        lock: root.lock
                     }
                 }
             }

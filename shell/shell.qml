@@ -26,8 +26,19 @@ ShellRoot {
         source: "modules/background/Background.qml"
     }
     Loader {
+        id: drawersLoader
+
         active: !shellRoot.greeterMode
-        source: "modules/drawers/Drawers.qml"
+
+        onActiveChanged: {
+            if (active)
+                setSource("modules/drawers/Drawers.qml", { lock: lock.lock });
+        }
+
+        Component.onCompleted: {
+            if (active)
+                setSource("modules/drawers/Drawers.qml", { lock: lock.lock });
+        }
     }
     Loader {
         active: !shellRoot.greeterMode

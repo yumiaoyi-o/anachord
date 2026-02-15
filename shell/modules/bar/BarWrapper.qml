@@ -13,6 +13,7 @@ Item {
     required property ShellScreen screen
     required property PersistentProperties visibilities
     required property BarPopouts.Wrapper popouts
+    required property var lock
     required property bool disabled
 
     readonly property int padding: Math.max(Appearance.padding.smaller, Config.border.thickness)
@@ -113,6 +114,7 @@ Item {
             screen: root.screen
             visibilities: root.visibilities
             popouts: root.popouts
+            lock: root.lock
         }
     }
 }
