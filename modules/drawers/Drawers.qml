@@ -15,6 +15,7 @@ Variants {
     id: root
 
     required property var lock
+    readonly property bool sessionLocked: lock?.isLocked ?? lock?.locked ?? false
 
     model: Quickshell.screens
 
@@ -70,7 +71,7 @@ Variants {
             screen: scope.modelData
             name: "drawers"
             WlrLayershell.exclusionMode: ExclusionMode.Ignore
-            WlrLayershell.keyboardFocus: visibilities.launcher || ComponentColors.previewLocked ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+            WlrLayershell.keyboardFocus: root.sessionLocked ? WlrKeyboardFocus.None : (visibilities.launcher || ComponentColors.previewLocked ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None)
 
             mask: Region {
                 x: bar.implicitWidth + win.dragMaskPadding

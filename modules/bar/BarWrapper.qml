@@ -18,6 +18,7 @@ Item {
 
     readonly property int padding: Math.max(Appearance.padding.smaller, Config.border.thickness)
     readonly property int contentWidth: Config.bar.sizes.innerWidth + padding * 2
+    readonly property bool locked: lock?.isLocked ?? lock?.locked ?? false
 
     // "hideOnEmpty" mode: detect if current workspace has no windows
     readonly property var _mon: Hypr.monitorFor(screen)
@@ -32,8 +33,8 @@ Item {
         return false; // "autoHide"
     }
 
-    readonly property int exclusiveZone: !disabled && (modeVisible || visibilities.bar) ? contentWidth : Config.border.thickness
-    readonly property bool shouldBeVisible: !disabled && (modeVisible || visibilities.bar || isHovered)
+    readonly property int exclusiveZone: !locked && !disabled && (modeVisible || visibilities.bar) ? contentWidth : Config.border.thickness
+    readonly property bool shouldBeVisible: !locked && !disabled && (modeVisible || visibilities.bar || isHovered)
     property bool isHovered
 
     function closeTray(): void {
@@ -48,7 +49,7 @@ Item {
         content.item?.handleWheel(y, angleDelta);
     }
 
-    visible: width > Config.border.thickness
+    visible: !locked && width > Config.border.thickness
     implicitWidth: Config.border.thickness
 
     states: State {

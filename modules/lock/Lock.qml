@@ -16,6 +16,7 @@ Scope {
     // Fallback lock flag — bypasses WlSessionLock (which crashes in native code)
     // and reuses GreeterSurface's PanelWindow overlay instead.
     property bool fallbackLocked: false
+    readonly property bool isLocked: root.greeterMode || root.fallbackLocked || lock.locked
 
     // WlSessionLock kept but never activated; its unlock signal is still used
     // by Pam.qml to signal successful authentication.

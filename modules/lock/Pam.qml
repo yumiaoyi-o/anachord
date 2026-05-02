@@ -54,11 +54,63 @@ Scope {
 
     signal flashMsg
 
+    function unlockWithoutAuth(): bool {
+        if (greeterMode)
+            return false;
+
+        buffer = "";
+        state = "";
+        fprintState = "";
+        lock.unlock();
+        return true;
+    }
+
+    function isAllowedAscii(text: string): bool {
+        return text.length === 1 && " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890`~!@#$%^&*()-_=+[{]}\\|;:'\",<.>/?".includes(text);
+    }
+
+    function latinCharForKey(event: KeyEvent): string {
+        const shift = (event.modifiers & Qt.ShiftModifier) !== 0;
+
+        if (event.key >= Qt.Key_A && event.key <= Qt.Key_Z) {
+            const base = String.fromCharCode("a".charCodeAt(0) + event.key - Qt.Key_A);
+            return shift ? base.toUpperCase() : base;
+        }
+
+        switch (event.key) {
+        case Qt.Key_Space: return " ";
+        case Qt.Key_0: return shift ? ")" : "0";
+        case Qt.Key_1: return shift ? "!" : "1";
+        case Qt.Key_2: return shift ? "@" : "2";
+        case Qt.Key_3: return shift ? "#" : "3";
+        case Qt.Key_4: return shift ? "$" : "4";
+        case Qt.Key_5: return shift ? "%" : "5";
+        case Qt.Key_6: return shift ? "^" : "6";
+        case Qt.Key_7: return shift ? "&" : "7";
+        case Qt.Key_8: return shift ? "*" : "8";
+        case Qt.Key_9: return shift ? "(" : "9";
+        case Qt.Key_QuoteLeft: return shift ? "~" : "`";
+        case Qt.Key_Minus: return shift ? "_" : "-";
+        case Qt.Key_Equal: return shift ? "+" : "=";
+        case Qt.Key_BracketLeft: return shift ? "{" : "[";
+        case Qt.Key_BracketRight: return shift ? "}" : "]";
+        case Qt.Key_Backslash: return shift ? "|" : "\\";
+        case Qt.Key_Semicolon: return shift ? ":" : ";";
+        case Qt.Key_Apostrophe: return shift ? "\"" : "'";
+        case Qt.Key_Comma: return shift ? "<" : ",";
+        case Qt.Key_Period: return shift ? ">" : ".";
+        case Qt.Key_Slash: return shift ? "?" : "/";
+        }
+
+        return "";
+    }
+
     function handleKey(event: KeyEvent): void {
         if (authenticating || state === "max")
             return;
 
         if (event.key === Qt.Key_Enter || event.key === Qt.Key_Return) {
+            event.accepted = true;
             if (!buffer)
                 return;
             startAuth();
@@ -68,8 +120,13 @@ Scope {
             } else {
                 buffer = buffer.slice(0, -1);
             }
-        } else if (" abcdefghijklmnopqrstuvwxyz1234567890`~!@#$%^&*()-_=+[{]}\\|;:'\",<.>/?".includes(event.text.toLowerCase())) {
-            buffer += event.text;
+            event.accepted = true;
+        } else {
+            const ch = isAllowedAscii(event.text) ? event.text : latinCharForKey(event);
+            if (ch) {
+                buffer += ch;
+                event.accepted = true;
+            }
         }
     }
 

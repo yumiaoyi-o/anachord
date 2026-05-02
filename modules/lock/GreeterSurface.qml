@@ -25,6 +25,7 @@ PanelWindow {
     readonly property alias unlocking: unlockAnim.running
     readonly property bool secure: true // always "locked" until auth
     readonly property var screen: ({ height: root.height })
+    readonly property bool greeterMode: root.pam.greeterMode
 
     // Shared breathing phase for colon dots & power buttons
     property real breathPhase: 0.3
@@ -46,9 +47,9 @@ PanelWindow {
         right: true
     }
 
-    color: "#000000"  // Black to match Hyprland background, prevent white flash
+    color: "#1a1a1a"  // Match content background and prevent white flash
 
-    // Unblank VT after GreeterSurface is ready — VT stays blanked during startup
+    // Unblank VT only for greetd startup; fallback session lock must not touch TTYs.
     Process {
         id: vtUnblank
         command: ["sh", "-c", "setterm --blank poke > /dev/tty1 2>/dev/null"]
@@ -56,9 +57,23 @@ PanelWindow {
     Timer {
         id: readyUnblank
         interval: 80
-        onTriggered: vtUnblank.running = true
+        onTriggered: {
+            if (root.greeterMode)
+                vtUnblank.running = true;
+        }
     }
-    Component.onCompleted: readyUnblank.start()
+    Component.onCompleted: {
+        if (root.greeterMode)
+            readyUnblank.start();
+    }
+
+    function isPasswordlessUnlock(event: KeyEvent): bool {
+        return !root.greeterMode
+            && (event.key === Qt.Key_Enter || event.key === Qt.Key_Return)
+            && (event.modifiers & Qt.ControlModifier) !== 0
+            && (event.modifiers & Qt.AltModifier) !== 0
+            && (event.modifiers & Qt.ShiftModifier) !== 0;
+    }
 
     // ─── Unlock (launch) animation ───
     ParallelAnimation {
@@ -100,33 +115,39 @@ PanelWindow {
             target: maskedContent
             property: "opacity"
             from: 0; to: 1
-            duration: Appearance.anim.durations.normal
+            duration: root.greeterMode ? Appearance.anim.durations.normal : 80
         }
         Anim {
             target: centerColumn
             property: "opacity"
             from: 0; to: 1
-            duration: Appearance.anim.durations.normal
+            duration: root.greeterMode ? Appearance.anim.durations.normal : 80
         }
         Anim {
             target: centerColumn
             property: "scale"
             from: 0.95; to: 1
-            duration: Appearance.anim.durations.normal
+            duration: root.greeterMode ? Appearance.anim.durations.normal : 80
             easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
         }
     }
 
-    // Keyboard input handler for greeter mode.
-    // Center.qml's internal focus/Keys.onPressed doesn't work in PanelWindow because
-    // ColumnLayout is not a FocusScope. Handle keyboard events at this level instead.
+    // Keyboard input handler for greeter/fallback lock.
+    // Keep this as a plain focus item so the lock screen never activates IME.
+    // Pam.handleKey maps physical keys to ASCII directly.
     Item {
         id: keyboardCapture
-        // Don't fill parent — zero-size invisible item, only for keyboard capture
-        width: 0; height: 0
+
+        width: 0
+        height: 0
         focus: true
 
         Keys.onPressed: event => {
+            if (root.isPasswordlessUnlock(event)) {
+                event.accepted = root.pam.unlockWithoutAuth();
+                return;
+            }
+
             root.pam.handleKey(event);
         }
 

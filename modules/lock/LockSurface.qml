@@ -98,7 +98,7 @@ WlSessionLockSurface {
         id: innerArea
 
         anchors.fill: parent
-        anchors.margins: Config.border.thickness
+        anchors.margins: 0
 
         Item {
             id: maskedContent
@@ -106,7 +106,7 @@ WlSessionLockSurface {
             anchors.fill: parent
             opacity: 0
 
-            layer.enabled: true
+            layer.enabled: false
             layer.effect: MultiEffect {
                 maskSource: innerMask
                 maskEnabled: true
@@ -194,7 +194,7 @@ WlSessionLockSurface {
 
             Rectangle {
                 anchors.fill: parent
-                radius: Config.border.rounding
+                radius: 0
             }
         }
     }

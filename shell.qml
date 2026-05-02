@@ -32,12 +32,12 @@ ShellRoot {
 
         onActiveChanged: {
             if (active)
-                setSource("modules/drawers/Drawers.qml", { lock: lock.lock });
+                setSource("modules/drawers/Drawers.qml", { lock: lock });
         }
 
         Component.onCompleted: {
             if (active)
-                setSource("modules/drawers/Drawers.qml", { lock: lock.lock });
+                setSource("modules/drawers/Drawers.qml", { lock: lock });
         }
     }
     Loader {
