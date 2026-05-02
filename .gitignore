@@ -1,0 +1,13 @@
+# Runtime/cache
+.cache/
+__pycache__/
+*.pyc
+*.qmlc
+*.log
+*.tmp
+*~
+.DS_Store
+
+# Local secrets/env, just in case
+.env
+.env.*
