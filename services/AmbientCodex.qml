@@ -129,6 +129,14 @@ Singleton {
             return qsTr("能力侦察");
         case "research-code":
             return qsTr("项目扫描");
+        case "automation-guardian":
+            return qsTr("自动化守门");
+        case "task-planner":
+            return qsTr("任务规划");
+        case "retention-keeper":
+            return qsTr("留存清洗");
+        case "codex-worker":
+            return qsTr("Codex worker");
         default:
             return agent ? String(agent) : qsTr("协作者");
         }
