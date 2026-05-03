@@ -45,6 +45,11 @@ Item {
             text: qsTr("Weather")
         }
 
+        Tab {
+            iconName: "neurology"
+            text: qsTr("Codex")
+        }
+
         // Tab {
         //     iconName: "workspaces"
         //     text: qsTr("Workspaces")

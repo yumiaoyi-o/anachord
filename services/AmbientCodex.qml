@@ -1,0 +1,149 @@
+pragma Singleton
+
+import qs.utils
+import Quickshell
+import Quickshell.Io
+import QtQuick
+
+Singleton {
+    id: root
+
+    readonly property string basePath: `${Paths.home}/.codex/ambient`
+    readonly property string runnerPath: `${basePath}/bin/ambient.py`
+    readonly property string statePath: `${basePath}/state.json`
+    readonly property string cardsPath: `${basePath}/cards.json`
+    readonly property string dashboardPath: `${basePath}/dashboard.md`
+
+    property var state: ({})
+    property var cardsDoc: ({})
+    property bool stateLoaded: false
+    property bool cardsLoaded: false
+    property string error: ""
+    property string lastRunOutput: ""
+    property string lastRunError: ""
+
+    readonly property bool loaded: stateLoaded && cardsLoaded
+    readonly property bool runningScan: runScanProc.running
+    readonly property var latestRun: state.latest_run ?? ({})
+    readonly property var recentRuns: state.recent_runs ?? []
+    readonly property var agents: state.agents ?? []
+    readonly property var usageLatest: state.usage_latest ?? ({})
+    readonly property var readinessLatest: state.readiness_latest ?? ({})
+    readonly property var cardCounts: state.card_counts ?? ({})
+    readonly property var cards: cardsDoc.cards ?? []
+    readonly property var recentCards: cardsDoc.recent_cards ?? []
+
+    function reload(): void {
+        stateFile.reload();
+        cardsFile.reload();
+    }
+
+    function runScan(): void {
+        if (runScanProc.running)
+            return;
+
+        lastRunOutput = "";
+        lastRunError = "";
+        runScanProc.running = true;
+    }
+
+    function resolvePath(path: string): string {
+        if (!path)
+            return "";
+        if (path.startsWith("/"))
+            return path;
+        if (path.startsWith("~"))
+            return path.replace("~", Paths.home);
+        return `${Paths.home}/${path}`;
+    }
+
+    function openPath(path: string): void {
+        const resolved = resolvePath(path);
+        if (resolved)
+            Quickshell.execDetached(["xdg-open", resolved]);
+    }
+
+    function openDashboard(): void {
+        openPath(latestRun.report_path || dashboardPath);
+    }
+
+    function formatTime(value: var): string {
+        if (!value)
+            return qsTr("Never");
+
+        const date = new Date(value);
+        if (isNaN(date.getTime()))
+            return String(value);
+
+        return Qt.formatDateTime(date, "MM-dd hh:mm");
+    }
+
+    function percentText(value: var): string {
+        if (value === null || value === undefined || value === "")
+            return "--";
+        return `${Number(value).toFixed(1)}%`;
+    }
+
+    function parseState(text: string): void {
+        try {
+            state = JSON.parse(text || "{}");
+            stateLoaded = true;
+            error = "";
+        } catch (e) {
+            error = `state.json: ${e.message}`;
+            stateLoaded = false;
+        }
+    }
+
+    function parseCards(text: string): void {
+        try {
+            cardsDoc = JSON.parse(text || "{}");
+            cardsLoaded = true;
+            error = "";
+        } catch (e) {
+            error = `cards.json: ${e.message}`;
+            cardsLoaded = false;
+        }
+    }
+
+    FileView {
+        id: stateFile
+
+        path: root.statePath
+        watchChanges: true
+
+        onLoaded: root.parseState(text())
+        onFileChanged: reload()
+        onLoadFailed: err => {
+            root.stateLoaded = false;
+            root.error = `state.json: ${FileViewError.toString(err)}`;
+        }
+    }
+
+    FileView {
+        id: cardsFile
+
+        path: root.cardsPath
+        watchChanges: true
+
+        onLoaded: root.parseCards(text())
+        onFileChanged: reload()
+        onLoadFailed: err => {
+            root.cardsLoaded = false;
+            root.error = `cards.json: ${FileViewError.toString(err)}`;
+        }
+    }
+
+    Process {
+        id: runScanProc
+
+        command: ["env", "PYTHONDONTWRITEBYTECODE=1", "python", root.runnerPath, "run"]
+        stdout: StdioCollector {
+            onStreamFinished: root.lastRunOutput = text.trim()
+        }
+        stderr: StdioCollector {
+            onStreamFinished: root.lastRunError = text.trim()
+        }
+        onExited: root.reload()
+    }
+}

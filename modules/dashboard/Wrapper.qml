@@ -6,6 +6,7 @@ import qs.config
 import qs.utils
 import Anachord
 import Quickshell
+import Quickshell.Io
 import QtQuick
 
 Item {
@@ -35,6 +36,20 @@ Item {
     visible: height > 0
     implicitHeight: 0
     implicitWidth: content.implicitWidth
+
+    IpcHandler {
+        target: "dashboard"
+
+        function openCodex(): void {
+            root.dashState.currentTab = 3;
+            root.visibilities.dashboard = true;
+        }
+
+        function openTab(index: int): void {
+            root.dashState.currentTab = Math.max(0, Math.min(index, 3));
+            root.visibilities.dashboard = true;
+        }
+    }
 
     onStateChanged: {
         if (state === "visible" && timer.running) {

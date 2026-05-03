@@ -104,6 +104,11 @@ Item {
                     index: 2
                     sourceComponent: Weather {}
                 }
+
+                Pane {
+                    index: 3
+                    sourceComponent: Ambient {}
+                }
             }
 
             Behavior on contentX {
