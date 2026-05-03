@@ -29,6 +29,7 @@ Singleton {
     readonly property var agents: state.agents ?? []
     readonly property var usageLatest: state.usage_latest ?? ({})
     readonly property var readinessLatest: state.readiness_latest ?? ({})
+    readonly property var idleStatus: state.idle_status ?? ({})
     readonly property var cardCounts: state.card_counts ?? ({})
     readonly property var cards: cardsDoc.cards ?? []
     readonly property var recentCards: cardsDoc.recent_cards ?? []
@@ -135,10 +136,33 @@ Singleton {
 
     function runModeText(mode: var): string {
         if (!mode)
-            return qsTr("手动 v0.2");
+            return qsTr("手动 v0.3");
         if (String(mode).startsWith("manual-"))
             return qsTr("手动 %1").arg(String(mode).replace("manual-", ""));
+        if (String(mode).startsWith("idle-"))
+            return qsTr("空闲 %1").arg(String(mode).replace("idle-", ""));
+        if (String(mode).startsWith("morning-"))
+            return qsTr("晨间 %1").arg(String(mode).replace("morning-", ""));
         return String(mode);
+    }
+
+    function boolText(value: var): string {
+        if (value === null || value === undefined)
+            return qsTr("未知");
+        return value ? qsTr("是") : qsTr("否");
+    }
+
+    function idleSummary(idle: var): string {
+        if (!idle || Object.keys(idle).length === 0)
+            return qsTr("未启动");
+
+        const enabled = idle.enabled ? qsTr("已启用") : qsTr("未启用");
+        const running = idle.running ? qsTr("运行中") : qsTr("未运行");
+        const seconds = Number(idle.idle_seconds ?? 0);
+        const threshold = Number(idle.idle_threshold_seconds ?? 0);
+        if (threshold > 0)
+            return qsTr("%1，%2，空闲 %3/%4 分").arg(enabled).arg(running).arg(Math.floor(seconds / 60)).arg(Math.floor(threshold / 60));
+        return qsTr("%1，%2").arg(enabled).arg(running);
     }
 
     function shortId(value: var): string {

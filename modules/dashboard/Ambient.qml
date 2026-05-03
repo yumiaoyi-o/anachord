@@ -14,6 +14,7 @@ Item {
     readonly property var run: AmbientCodex.latestRun
     readonly property var usage: AmbientCodex.usageLatest
     readonly property var readiness: AmbientCodex.readinessLatest
+    readonly property var idle: AmbientCodex.idleStatus
     readonly property var counts: AmbientCodex.cardCounts
     readonly property int cardCount: AmbientCodex.cards.length
     property int cardIndex: 0
@@ -225,6 +226,11 @@ Item {
                         BoundaryRow {
                             icon: "shield"
                             text: qsTr("守门状态：%1").arg(AmbientCodex.modeText(root.readiness.mode))
+                        }
+
+                        BoundaryRow {
+                            icon: "settings_backup_restore"
+                            text: qsTr("自动化：%1").arg(AmbientCodex.idleSummary(root.idle))
                         }
 
                         BoundaryRow {
