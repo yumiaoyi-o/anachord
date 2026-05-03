@@ -165,6 +165,19 @@ Singleton {
         return qsTr("%1，%2").arg(enabled).arg(running);
     }
 
+    function headerSummary(): string {
+        if (!loaded)
+            return qsTr("等待本地工作舱状态。");
+        if (runningScan)
+            return qsTr("正在运行本地扫描。");
+
+        const mode = runModeText(latestRun.mode);
+        const idle = idleSummary(idleStatus);
+        if (idleStatus && Object.keys(idleStatus).length > 0)
+            return qsTr("最近%1；自动化%2。").arg(mode).arg(idle);
+        return qsTr("最近%1；等待自动化状态。").arg(mode);
+    }
+
     function shortId(value: var): string {
         if (!value)
             return "";

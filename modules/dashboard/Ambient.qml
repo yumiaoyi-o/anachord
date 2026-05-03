@@ -74,8 +74,11 @@ Item {
                     }
 
                     StyledText {
-                        text: AmbientCodex.loaded ? qsTr("正在读取最新本地扫描。") : qsTr("等待本地工作舱状态。")
+                        Layout.fillWidth: true
+                        text: AmbientCodex.headerSummary()
                         color: ComponentColors.region.shared.controls.common.subtext
+                        elide: Text.ElideRight
+                        maximumLineCount: 1
                     }
                 }
 
