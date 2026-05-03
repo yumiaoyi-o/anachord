@@ -39,9 +39,9 @@ Item {
         anchors.top: tabs.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.bottom: parent.bottom
         anchors.margins: Appearance.padding.large
 
+        implicitHeight: view.implicitHeight
         radius: Appearance.rounding.normal
         color: "transparent"
 

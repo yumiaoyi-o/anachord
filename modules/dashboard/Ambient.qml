@@ -42,20 +42,20 @@ Item {
                 spacing: 0
 
                 StyledText {
-                    text: qsTr("Ambient Codex")
+                    text: qsTr("Codex 本地工作舱")
                     font.pointSize: Appearance.font.size.large
                     font.weight: 600
                 }
 
                 StyledText {
-                    text: AmbientCodex.loaded ? qsTr("Local cockpit is reading the latest manual scan.") : qsTr("Waiting for local Ambient state.")
+                    text: AmbientCodex.loaded ? qsTr("正在读取最新本地扫描。") : qsTr("等待本地工作舱状态。")
                     color: ComponentColors.region.shared.controls.common.subtext
                 }
             }
 
             IconTextButton {
                 icon: AmbientCodex.runningScan ? "sync" : "refresh"
-                text: AmbientCodex.runningScan ? qsTr("Running") : qsTr("Run scan")
+                text: AmbientCodex.runningScan ? qsTr("运行中") : qsTr("手动扫描")
                 enabled: !AmbientCodex.runningScan
                 type: IconTextButton.Tonal
                 onClicked: AmbientCodex.runScan()
@@ -63,7 +63,7 @@ Item {
 
             IconTextButton {
                 icon: "open_in_new"
-                text: qsTr("Dashboard")
+                text: qsTr("打开报告")
                 type: IconTextButton.Text
                 onClicked: AmbientCodex.openDashboard()
             }
@@ -87,37 +87,37 @@ Item {
                     spacing: Appearance.spacing.normal
 
                     Metric {
-                        title: qsTr("Run")
-                        value: root.run.status || qsTr("missing")
-                        detail: root.run.id || qsTr("No run yet")
+                        title: qsTr("运行")
+                        value: AmbientCodex.statusText(root.run.status)
+                        detail: root.run.id || qsTr("还没有运行")
                         icon: "task_alt"
                     }
 
                     Metric {
-                        title: qsTr("Cards")
+                        title: qsTr("卡片")
                         value: String(root.counts.open ?? root.counts.latest_run ?? AmbientCodex.cards.length)
-                        detail: qsTr("%1 high, %2 review").arg(root.counts.high_importance ?? 0).arg(root.counts.needs_review ?? 0)
+                        detail: qsTr("%1 个重要，%2 个待审").arg(root.counts.high_importance ?? 0).arg(root.counts.needs_review ?? 0)
                         icon: "inbox"
                     }
 
                     Metric {
-                        title: qsTr("Quota")
+                        title: qsTr("额度")
                         value: AmbientCodex.percentText(root.usage.primary_used_percent)
-                        detail: qsTr("secondary %1").arg(AmbientCodex.percentText(root.usage.secondary_used_percent))
+                        detail: qsTr("长期 %1").arg(AmbientCodex.percentText(root.usage.secondary_used_percent))
                         icon: "speed"
                     }
 
                     Metric {
-                        title: qsTr("Updated")
+                        title: qsTr("更新")
                         value: AmbientCodex.formatTime(root.run.finished_at)
-                        detail: root.run.mode || qsTr("manual-v0.2")
+                        detail: AmbientCodex.runModeText(root.run.mode)
                         icon: "schedule"
                     }
 
                     Metric {
-                        title: qsTr("Guard")
-                        value: root.readiness.mode || qsTr("unknown")
-                        detail: root.readiness.can_codex_worker ? qsTr("worker ready") : root.readiness.can_prepare ? qsTr("local only") : qsTr("paused")
+                        title: qsTr("守门")
+                        value: AmbientCodex.modeText(root.readiness.mode)
+                        detail: root.readiness.can_codex_worker ? qsTr("可启动后台任务") : root.readiness.can_prepare ? qsTr("仅本地准备") : qsTr("暂停")
                         icon: "shield"
                     }
                 }
@@ -162,7 +162,7 @@ Item {
                     spacing: Appearance.spacing.small
 
                     Header {
-                        title: qsTr("Agents")
+                        title: qsTr("协作者状态")
                         icon: "hub"
                     }
 
@@ -193,33 +193,33 @@ Item {
                     spacing: Appearance.spacing.small
 
                     Header {
-                        title: qsTr("Boundary")
+                        title: qsTr("边界")
                         icon: "verified_user"
                     }
 
                     BoundaryRow {
                         icon: "shield"
-                        text: qsTr("Guard mode: %1").arg(root.readiness.mode || qsTr("unknown"))
+                        text: qsTr("守门状态：%1").arg(AmbientCodex.modeText(root.readiness.mode))
                     }
 
                     BoundaryRow {
                         icon: "visibility"
-                        text: qsTr("Read-only local scans")
+                        text: qsTr("只读本地扫描")
                     }
 
                     BoundaryRow {
                         icon: "edit_off"
-                        text: qsTr("No project edits or Git push")
+                        text: qsTr("不编辑项目，不推送 Git")
                     }
 
                     BoundaryRow {
                         icon: "lock"
-                        text: qsTr("No sudo, browser, email, or HPC action")
+                        text: qsTr("不使用 sudo、浏览器、邮件或 HPC")
                     }
 
                     BoundaryRow {
                         icon: "data_object"
-                        text: qsTr("Only usage metadata is parsed")
+                        text: qsTr("只解析额度元数据")
                     }
                 }
             }
@@ -230,7 +230,7 @@ Item {
             spacing: Appearance.spacing.small
 
             Header {
-                title: qsTr("Action cards")
+                title: qsTr("行动卡片")
                 icon: "view_agenda"
             }
 
@@ -341,7 +341,7 @@ Item {
 
         StyledText {
             Layout.preferredWidth: 150
-            text: agentRow.agent.agent || qsTr("agent")
+            text: AmbientCodex.agentText(agentRow.agent.agent)
             font.weight: 500
             elide: Text.ElideRight
         }
@@ -401,19 +401,19 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: actionCard.card.title || qsTr("Untitled")
+                    text: actionCard.card.title || qsTr("未命名")
                     font.weight: 600
                     font.pointSize: Appearance.font.size.normal
                     wrapMode: Text.WordWrap
                 }
 
                 Pill {
-                    text: actionCard.card.agent || qsTr("agent")
+                    text: AmbientCodex.agentText(actionCard.card.agent)
                     tone: "neutral"
                 }
 
                 Pill {
-                    text: actionCard.card.permission || qsTr("Observe")
+                    text: AmbientCodex.permissionText(actionCard.card.permission)
                     tone: actionCard.card.permission === "Observe" ? "success" : "warning"
                 }
             }
@@ -439,7 +439,7 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: qsTr("importance %1  confidence %2").arg(actionCard.card.importance ?? "-").arg(actionCard.card.confidence ?? "-")
+                    text: qsTr("重要性 %1  置信度 %2").arg(actionCard.card.importance ?? "-").arg(actionCard.card.confidence ?? "-")
                     color: ComponentColors.region.shared.controls.common.subtext
                     elide: Text.ElideRight
                 }
@@ -447,7 +447,7 @@ Item {
                 IconTextButton {
                     visible: !!actionCard.card.report_path
                     icon: "article"
-                    text: qsTr("Report")
+                    text: qsTr("报告")
                     type: IconTextButton.Text
                     onClicked: AmbientCodex.openPath(actionCard.card.report_path)
                 }

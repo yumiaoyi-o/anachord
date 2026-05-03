@@ -67,9 +67,83 @@ Singleton {
         openPath(latestRun.report_path || dashboardPath);
     }
 
+    function modeText(mode: var): string {
+        switch (mode) {
+        case "ready":
+            return qsTr("可工作");
+        case "local-only":
+            return qsTr("仅本地");
+        case "paused":
+            return qsTr("暂停");
+        default:
+            return mode ? String(mode) : qsTr("未知");
+        }
+    }
+
+    function statusText(status: var): string {
+        switch (status) {
+        case "complete":
+            return qsTr("完成");
+        case "running":
+            return qsTr("运行中");
+        case "idle":
+            return qsTr("空闲");
+        case "open":
+            return qsTr("待处理");
+        case "archived":
+            return qsTr("已归档");
+        default:
+            return status ? String(status) : qsTr("缺失");
+        }
+    }
+
+    function permissionText(permission: var): string {
+        switch (permission) {
+        case "Observe":
+            return qsTr("观察");
+        case "Prepare":
+            return qsTr("准备");
+        case "LocalEdit":
+            return qsTr("本地编辑");
+        case "GitPush":
+            return qsTr("Git 推送");
+        case "SystemChange":
+            return qsTr("系统更改");
+        case "ExternalAction":
+            return qsTr("外部动作");
+        case "SecretDenied":
+            return qsTr("凭据禁区");
+        default:
+            return permission ? String(permission) : qsTr("观察");
+        }
+    }
+
+    function agentText(agent: var): string {
+        switch (agent) {
+        case "orchestrator":
+            return qsTr("主控");
+        case "system-safety":
+            return qsTr("安全/系统");
+        case "capability-scout":
+            return qsTr("能力侦察");
+        case "research-code":
+            return qsTr("项目扫描");
+        default:
+            return agent ? String(agent) : qsTr("协作者");
+        }
+    }
+
+    function runModeText(mode: var): string {
+        if (!mode)
+            return qsTr("手动 v0.2");
+        if (String(mode).startsWith("manual-"))
+            return qsTr("手动 %1").arg(String(mode).replace("manual-", ""));
+        return String(mode);
+    }
+
     function formatTime(value: var): string {
         if (!value)
-            return qsTr("Never");
+            return qsTr("从未");
 
         const date = new Date(value);
         if (isNaN(date.getTime()))
