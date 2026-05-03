@@ -141,6 +141,14 @@ Singleton {
         return String(mode);
     }
 
+    function shortId(value: var): string {
+        if (!value)
+            return "";
+
+        const text = String(value);
+        return text.length > 15 ? `${text.slice(0, 12)}...` : text;
+    }
+
     function formatTime(value: var): string {
         if (!value)
             return qsTr("从未");
