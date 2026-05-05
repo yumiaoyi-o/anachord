@@ -81,7 +81,7 @@ Searcher {
     Process {
         id: getPreviewColoursProc
 
-        command: ["anachord", "wallpaper", "-p", root.previewPath, ...root.smartArg]
+        command: root.previewPath ? ["anachord", "wallpaper", "-p", root.previewPath, ...root.smartArg] : []
         stdout: StdioCollector {
             onStreamFinished: {
                 Colours.load(text, true);

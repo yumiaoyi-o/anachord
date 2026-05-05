@@ -47,7 +47,7 @@ Item {
 
         Tab {
             iconName: "neurology"
-            text: qsTr("Codex")
+            text: qsTr("Nexus")
         }
 
         // Tab {

@@ -16,7 +16,8 @@ Item {
     readonly property var readiness: AmbientCodex.readinessLatest
     readonly property var idle: AmbientCodex.idleStatus
     readonly property var counts: AmbientCodex.cardCounts
-    readonly property int cardCount: AmbientCodex.cards.length
+    readonly property var streamCards: AmbientCodex.displayCards
+    readonly property int cardCount: streamCards.length
     property int cardIndex: 0
     property real maxHeight: 720
 
@@ -68,7 +69,7 @@ Item {
                     spacing: 0
 
                     StyledText {
-                        text: qsTr("Codex 本地工作舱")
+                        text: qsTr("Codex Nexus")
                         font.pointSize: Appearance.font.size.large
                         font.weight: 600
                     }
@@ -123,9 +124,9 @@ Item {
                         }
 
                         Metric {
-                            title: qsTr("卡片")
-                            value: String(root.counts.open ?? root.counts.latest_run ?? AmbientCodex.cards.length)
-                            detail: qsTr("重要 %1 · 待审 %2").arg(root.counts.high_importance ?? 0).arg(root.counts.needs_review ?? 0)
+                            title: qsTr("线索")
+                            value: String(root.cardCount || root.counts.open || root.counts.latest_run || 0)
+                            detail: qsTr("重要 %1 · 待审 %2").arg(AmbientCodex.importantCount(root.streamCards)).arg(AmbientCodex.reviewCount(root.streamCards))
                             icon: "inbox"
                         }
 
@@ -144,7 +145,7 @@ Item {
                         }
 
                         Metric {
-                            title: qsTr("守门")
+                            title: qsTr("护栏")
                             value: AmbientCodex.modeText(root.readiness.mode)
                             detail: root.readiness.can_codex_worker ? qsTr("后台可用") : root.readiness.can_prepare ? qsTr("仅本地") : qsTr("暂停")
                             icon: "shield"
@@ -191,16 +192,48 @@ Item {
                         spacing: Appearance.spacing.small
 
                         Header {
-                            title: qsTr("协作者状态")
+                            title: qsTr("工作群")
                             icon: "hub"
                         }
 
-                        Repeater {
-                            model: AmbientCodex.agents
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Appearance.spacing.normal
 
-                            AgentRow {
-                                required property var modelData
-                                agent: modelData
+                            WorkStat {
+                                title: qsTr("岗位")
+                                value: String(AmbientCodex.officeWorkers.length)
+                            }
+
+                            WorkStat {
+                                title: qsTr("待执行")
+                                value: String(AmbientCodex.activeTaskCount())
+                            }
+
+                            WorkStat {
+                                title: qsTr("验收")
+                                value: String(AmbientCodex.messageCount("accepted"))
+                            }
+
+                            WorkStat {
+                                title: qsTr("事故")
+                                value: String(AmbientCodex.openIncidentCount())
+                            }
+                        }
+
+                        GridLayout {
+                            Layout.fillWidth: true
+                            columns: 2
+                            columnSpacing: Appearance.spacing.normal
+                            rowSpacing: Appearance.spacing.small
+
+                            Repeater {
+                                model: AmbientCodex.officeWorkers.length > 0 ? AmbientCodex.officeWorkers : AmbientCodex.agents
+
+                                AgentRow {
+                                    required property var modelData
+                                    agent: modelData
+                                }
                             }
                         }
                     }
@@ -222,13 +255,13 @@ Item {
                         spacing: Appearance.spacing.small
 
                         Header {
-                            title: qsTr("边界")
+                            title: qsTr("安全边界")
                             icon: "verified_user"
                         }
 
                         BoundaryRow {
                             icon: "shield"
-                            text: qsTr("守门状态：%1").arg(AmbientCodex.modeText(root.readiness.mode))
+                            text: qsTr("护栏状态：%1").arg(AmbientCodex.modeText(root.readiness.mode))
                         }
 
                         BoundaryRow {
@@ -238,17 +271,17 @@ Item {
 
                         BoundaryRow {
                             icon: "visibility"
-                            text: qsTr("只读本地扫描")
+                            text: qsTr("只收集、整理、测试、排查并写证据")
                         }
 
                         BoundaryRow {
                             icon: "edit_off"
-                            text: qsTr("不编辑项目，不推送 Git")
+                            text: qsTr("默认不编辑项目，不推送 Git")
                         }
 
                         BoundaryRow {
                             icon: "lock"
-                            text: qsTr("不使用 sudo、浏览器、邮件或 HPC")
+                            text: qsTr("默认不碰 sudo、凭据、邮件、HPC 或系统变更")
                         }
 
                         BoundaryRow {
@@ -268,7 +301,7 @@ Item {
                     spacing: Appearance.spacing.small
 
                     Header {
-                        title: qsTr("行动卡片")
+                        title: qsTr("线索流")
                         icon: "view_agenda"
                     }
 
@@ -307,7 +340,7 @@ Item {
 
                         anchors.left: parent.left
                         anchors.right: parent.right
-                        card: root.cardCount > 0 ? AmbientCodex.cards[root.cardIndex] : ({})
+                        card: root.cardCount > 0 ? root.streamCards[root.cardIndex] : ({})
                     }
 
                     MouseArea {
@@ -458,10 +491,38 @@ Item {
         }
     }
 
+    component WorkStat: ColumnLayout {
+        id: workStat
+
+        required property string title
+        required property string value
+
+        Layout.fillWidth: true
+        spacing: 0
+
+        StyledText {
+            Layout.fillWidth: true
+            text: workStat.title
+            color: ComponentColors.region.shared.controls.common.subtext
+            elide: Text.ElideRight
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            text: workStat.value
+            font.weight: 700
+            font.pointSize: Appearance.font.size.normal
+            elide: Text.ElideRight
+        }
+    }
+
     component AgentRow: RowLayout {
         id: agentRow
 
         required property var agent
+
+        readonly property bool officeWorker: agentRow.agent.worker !== undefined
+        readonly property string status: String(agentRow.agent.status || "")
 
         Layout.fillWidth: true
         spacing: Appearance.spacing.small
@@ -470,19 +531,19 @@ Item {
             implicitWidth: 8
             implicitHeight: 8
             radius: Appearance.rounding.full
-            color: agentRow.agent.status === "idle" ? ComponentColors.region.state.success : ComponentColors.region.state.warning
-        }
-
-        StyledText {
-            Layout.preferredWidth: 150
-            text: AmbientCodex.agentText(agentRow.agent.agent)
-            font.weight: 500
-            elide: Text.ElideRight
+            color: agentRow.status === "active" || agentRow.status === "idle" ? ComponentColors.region.state.success : agentRow.status === "vacant" || agentRow.status === "paused" ? ComponentColors.region.shared.controls.common.subtext : ComponentColors.region.state.warning
         }
 
         StyledText {
             Layout.fillWidth: true
-            text: agentRow.agent.message || agentRow.agent.status || ""
+            text: agentRow.officeWorker ? AmbientCodex.workerTitle(agentRow.agent) : AmbientCodex.agentText(agentRow.agent.agent)
+            font.weight: 600
+            elide: Text.ElideRight
+        }
+
+        StyledText {
+            Layout.preferredWidth: 58
+            text: agentRow.officeWorker ? AmbientCodex.workerBriefStatus(agentRow.agent) : (agentRow.agent.message || agentRow.agent.status || "")
             color: ComponentColors.region.shared.controls.common.subtext
             elide: Text.ElideRight
         }

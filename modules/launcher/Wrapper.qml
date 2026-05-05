@@ -31,6 +31,11 @@ Item {
     onShouldBeActiveChanged: {
         if (shouldBeActive) {
             timer.stop();
+            if (!content.active) {
+                content.active = true;
+                content.visible = true;
+            }
+            root.contentHeight = Math.min(root.maxHeight, content.implicitHeight);
             hideAnim.stop();
             showAnim.start();
         } else {
@@ -95,11 +100,10 @@ Item {
         interval: Appearance.anim.durations.extraLarge
         onRunningChanged: {
             if (running && !root.shouldBeActive) {
-                content.visible = false;
-                content.active = false;
+                return;
             } else {
                 root.contentHeight = Math.min(root.maxHeight, content.implicitHeight);
-                content.active = Qt.binding(() => root.shouldBeActive || root.visible);
+                content.active = true;
                 content.visible = true;
                 if (showAnim.running) {
                     showAnim.stop();

@@ -19,8 +19,8 @@ StyledRect {
     color: Colours.layer(ComponentColors.region.utilities.card.container.surface)
 
     Connections {
-        target: root.monitor
-        enabled: root.monitor !== null
+        target: root.monitor ?? null
+        enabled: root.monitor !== null && root.monitor !== undefined
 
         function onBrightnessChanged(): void {
             root.screenBrightness = root.monitor?.brightness ?? 0;

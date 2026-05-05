@@ -51,13 +51,6 @@ Item {
         }
     }
 
-    onStateChanged: {
-        if (state === "visible" && timer.running) {
-            timer.triggered();
-            timer.stop();
-        }
-    }
-
     states: State {
         name: "visible"
         when: root.visibilities.dashboard && Config.dashboard.enabled
@@ -91,27 +84,14 @@ Item {
         }
     ]
 
-    Timer {
-        id: timer
-
-        running: false
-        interval: Appearance.anim.durations.extraLarge
-        onTriggered: {
-            content.active = Qt.binding(() => (root.visibilities.dashboard && Config.dashboard.enabled) || root.visible);
-            content.visible = true;
-        }
-    }
-
     Loader {
         id: content
 
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
 
-        visible: false
-        active: false
-
-        Component.onCompleted: timer.start()
+        visible: true
+        active: true
 
         sourceComponent: Content {
             visibilities: root.visibilities

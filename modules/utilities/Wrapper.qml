@@ -26,13 +26,6 @@ Item {
     implicitHeight: 0
     implicitWidth: sidebar.visible ? sidebar.width : Config.utilities.sizes.width
 
-    onStateChanged: {
-        if (state === "visible" && timer.running) {
-            timer.triggered();
-            timer.stop();
-        }
-    }
-
     states: State {
         name: "visible"
         when: root.shouldBeActive
@@ -67,17 +60,6 @@ Item {
         }
     ]
 
-    Timer {
-        id: timer
-
-        running: false
-        interval: Appearance.anim.durations.extraLarge
-        onTriggered: {
-            content.active = Qt.binding(() => root.shouldBeActive || root.visible);
-            content.visible = true;
-        }
-    }
-
     Loader {
         id: content
 
@@ -85,10 +67,8 @@ Item {
         anchors.left: parent.left
         anchors.margins: Appearance.padding.large
 
-        visible: false
-        active: false
-
-        Component.onCompleted: timer.start()
+        visible: true
+        active: true
 
         sourceComponent: Content {
             implicitWidth: root.implicitWidth - Appearance.padding.large * 2

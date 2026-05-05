@@ -140,7 +140,7 @@ Item {
 
         property bool shouldBeActive
 
-        active: false
+        active: true
         opacity: 0
 
         states: State {
@@ -149,7 +149,6 @@ Item {
 
             PropertyChanges {
                 comp.opacity: 1
-                comp.active: true
             }
         }
 
@@ -158,26 +157,16 @@ Item {
                 from: ""
                 to: "active"
 
-                SequentialAnimation {
-                    PropertyAction {
-                        property: "active"
-                    }
-                    Anim {
-                        property: "opacity"
-                    }
+                Anim {
+                    property: "opacity"
                 }
             },
             Transition {
                 from: "active"
                 to: ""
 
-                SequentialAnimation {
-                    Anim {
-                        property: "opacity"
-                    }
-                    PropertyAction {
-                        property: "active"
-                    }
+                Anim {
+                    property: "opacity"
                 }
             }
         ]
